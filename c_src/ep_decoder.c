@@ -894,6 +894,7 @@ decode(ErlNifEnv *env, ep_tdata_t *tdata, ep_node_t *node)
     ep_state_t     *state = (ep_state_t *) enif_priv_data(env);
     wire_type_e     wire_type;
     ERL_NIF_TERM   *t, ret, head, tail, *t_used_end, term, *array;
+    char           *binary_end;
 
     dec = &(tdata->dec);
     stack = &(tdata->stack);
@@ -908,6 +909,7 @@ decode(ErlNifEnv *env, ep_tdata_t *tdata, ep_node_t *node)
     spot->type = spot_tuple;
     spot->pos = 0;
     spot->end_sentinel = dec->end;
+    binary_end = dec->end;
 
     dec->result = 0;
     while (spot >= stack->spots) {
@@ -983,6 +985,8 @@ decode(ErlNifEnv *env, ep_tdata_t *tdata, ep_node_t *node)
             }
             dec->end = spot->end_sentinel;
             continue;
+        } else if (dec->p > binary_end || dec->end > binary_end) {
+            raise_exception(evn, dec->term);
         }
 
         if (spot->type == spot_tuple) {
